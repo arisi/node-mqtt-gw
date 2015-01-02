@@ -1,17 +1,20 @@
 
-console.log ("ok");
+console.log ("node-mqtt-gw:");
 
 var serialport = require("serialport");
 
-serialport.list(function (err, ports) {
-  ports.forEach(function(port) {
-    console.log(port.comName);
-  });
-});
-
+portName = process.argv[2];
+if (portName=="" || portName==undefined) {
+    console.log("Available ports:");
+    serialport.list(function (err, ports) {
+      ports.forEach(function(port) {
+        console.log(port.comName);
+      });
+    });
+    return;
+}
 SerialPort = serialport.SerialPort // make a local instance of it
 
-portName = process.argv[2];
 
 var myPort = new SerialPort(portName, {
    baudRate: 115200,
