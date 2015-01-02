@@ -2,17 +2,16 @@
 console.log ("ok");
 
 var serialport = require("serialport");
-var SerialPort = serialport.SerialPort;
 
- // list serial ports:
 serialport.list(function (err, ports) {
   ports.forEach(function(port) {
     console.log(port.comName);
   });
 });
 
-SerialPort = serialport.SerialPort, // make a local instance of it
-   portName = "/dev/ttyACM0";
+SerialPort = serialport.SerialPort // make a local instance of it
+
+portName = process.argv[2];
 
 var myPort = new SerialPort(portName, {
    baudRate: 115200,
