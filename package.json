@@ -1,0 +1,31 @@
+{
+  "name": "node-mqtt-gw",
+  "version": "0.0.2",
+  "description": "MQTT Gateway for USB-Serial ",
+  "main": "ser.js",
+  "dependencies": {
+    "serialport": "^1.4.10",
+    "hamljs": "",
+    "express": "^4.10.7",
+    "consolidate": ""
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+        "mqgw": "ser.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arisi/node-mqtt-gw.git"
+  },
+  "keywords": [
+    "mqtt"
+  ],
+  "author": "Ari Siitonen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arisi/node-mqtt-gw/issues"
+  }
+}

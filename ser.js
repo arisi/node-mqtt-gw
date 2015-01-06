@@ -1,7 +1,35 @@
+#!/usr/bin/env node
 
 console.log ("node-mqtt-gw:");
 
 var serialport = require("serialport");
+
+var express = require('express')
+var cons = require('consolidate');
+var app = express()
+console.log(__dirname);
+cons.haml(__dirname+'/views/index.haml', { user: 'tobi' }, function(err, html){
+  if (err) throw err;
+  console.log(html);
+});
+
+app.get('/', function (req, res) {
+  res.send('Hello World')
+})
+
+app.get('/ports', function (req, res) {
+  serialport.list(function (err, ports) {
+      s="portit: ";
+      ports.forEach(function(port) {
+        console.log(port.comName);
+        s+=port.comName+",";
+      });
+      res.send(s)
+    });
+
+})
+
+app.listen(3000)
 
 portName = process.argv[2];
 if (portName=="" || portName==undefined) {
