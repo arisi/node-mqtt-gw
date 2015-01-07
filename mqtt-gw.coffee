@@ -12,6 +12,9 @@ express = require("express")
 fs = require('fs');
 hamlc = require 'haml-coffee'
 cs = require 'coffee-script'
+printf = require('printf');
+dgram = require('dgram');
+sprintf = require('sprintf').sprintf;
 
 app = express()
 
@@ -85,6 +88,7 @@ sse_out = (obj) ->
 
 addport = (p) ->
   if not plist[p] or plist[p].state=="closed"
+    zap p
     plist[p]={state: "init",p3: false, p3esc: false,p3buf: [],stamp: 0, id:"" }
     plistp[p]={}
   plist[p].exist=stamp()
@@ -92,6 +96,9 @@ addport = (p) ->
 P3_START='~'.charCodeAt(0)
 P3_END='^'.charCodeAt(0)
 P3_ESC='#'.charCodeAt(0)
+
+
+clients={}
 
 p3_inpac = (p,pac) ->
   plist[p].lastp3=stamp()
@@ -110,7 +117,23 @@ p3_inpac = (p,pac) ->
     else plist[p].id!=id
       #conflict -- serial number has changed?
   else if pac[0]=="U".charCodeAt(0)
-    console.log "UDP!!!! len=#{pac[11]}"
+    mac=sprintf "%02X:%02X",pac[2],pac[1]
+    ip=sprintf "%d.%d.%d.%d",pac[8],pac[7],pac[6],pac[5]
+    port=pac[9]+pac[10]*0x100
+    console.log "UDP!!!! len=#{pac[11]} mac=#{mac} ip=#{ip} port=#{port}"
+    if not plistp[p].udp
+      plistp[p].udp=dgram.createSocket('udp4');
+      plistp[p].udp.on 'listening', () ->
+        address = plistp[p].udp.address();
+        console.log 'UDP Server listening on ' + address.address + ":" + address.port
+      plistp[p].udp.on 'message', (message, remote) ->
+        console.log "msg:",message
+    message = new Buffer(pac[12..-2]);
+    plistp[p].udp.send message, 0, message.length, port, ip, (err, bytes) ->
+      if (err)
+        throw err;
+      console.log('UDP message sent');
+
   sse_out
     "type": "s3"
     "port": p
@@ -177,8 +200,7 @@ initport = (p) ->
 
       myPort.on "close", (error) ->
         console.log "port closed: #{p} " + error
-        delete plist[p]
-        delete plistp[p]
+        zap p
         #plist[p].state="closed"
         return
 
@@ -210,6 +232,16 @@ plist2sse = (ses) ->
           "data": plist[p]
         old_plist[p].state=plist[p].state
 
+zap = (p) ->
+  if plist[p]
+    delete plist[p]
+  if plistp[p]
+    if plistpp[p].udp
+      plistpp[p].udp.close
+    if plistp[p].port
+      plistp[p].port.close
+    delete plistp[p]
+
 
 scanports = () ->
   #this needed for linux, as .list does not seem to pick up all serial ports
@@ -229,17 +261,11 @@ scanports = () ->
   for p,obj of plist
     if obj.state == "open" and obj.exist < (stamp() - 10000) #lost port
       console.log "stale port #{p}"
-      if plistp[p].port
-        plistp[p].port.close
-      delete plist[p]
-      delete plistp[p]
+      zap p
       console.log plist
     if obj.state == "open" and obj.lastp3 < (stamp() - 10000) #lost port
       console.log "stale p3 port #{p}"
-      if plistp[p].port
-        plistp[p].port.close
-      delete plist[p]
-      delete plistp[p]
+      zap p
       console.log plist
     if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
       if plist[p].state=="initing" and obj.stamp > (stamp() - 10000)
