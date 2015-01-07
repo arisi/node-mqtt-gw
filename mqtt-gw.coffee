@@ -138,6 +138,10 @@ p3_inchar = (p,ch) ->
   return true
 
 initport = (p) ->
+  if plist[p].state=="initing"
+    return
+  plist[p].state="initing"
+  plist[p].stamp=stamp()
   myPort = new SerialPort(p,
     baudRate: 115200
     dataBits: 8
