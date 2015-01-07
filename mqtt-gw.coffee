@@ -100,6 +100,43 @@ P3_ESC='#'.charCodeAt(0)
 
 clients={}
 
+p3_outpac = (p,pac) ->
+  console.log "p3_outpac",p,pac
+  if plistp[p].port
+
+    buf=[]
+    buf.push pac["proto"].charCodeAt(0)
+
+    macs=pac["mac"].split(":")
+    buf.push parseInt(macs[0],16)
+    buf.push parseInt(macs[1],16)
+    buf.push 0
+    buf.push 0
+
+    ips=pac["ip"].split(".")
+    buf.push parseInt(ips[3])
+    buf.push parseInt(ips[2])
+    buf.push parseInt(ips[1])
+    buf.push parseInt(ips[0])
+
+    buf.push (pac["port"]&0xff)
+    buf.push pac["port"]/0x100
+    buf.push pac["data"].length
+    for ch in pac["data"].split("")
+      buf.push ch.charCodeAt(0)
+    check=0
+    for b in buf
+      check^=b
+    buf.push check
+    buf.unshift P3_START
+    buf.push P3_END
+    console.log buf
+    #pp buf
+    #pp "#{P3_START.chr}#{buf.pack("C*")}#{P3_END.chr}"
+
+    plistp[p].port.write buf
+
+
 p3_inpac = (p,pac) ->
   plist[p].lastp3=stamp()
   if pac[0]=="P".charCodeAt(0)
@@ -116,6 +153,13 @@ p3_inpac = (p,pac) ->
 
     else plist[p].id!=id
       #conflict -- serial number has changed?
+    p3_outpac p,
+      proto: "P"
+      mac: "00:00"
+      ip: "0.0.0.0"
+      port: 0
+      data: "PONG"
+
   else if pac[0]=="U".charCodeAt(0)
     mac=sprintf "%02X:%02X",pac[2],pac[1]
     ip=sprintf "%d.%d.%d.%d",pac[8],pac[7],pac[6],pac[5]
@@ -127,7 +171,7 @@ p3_inpac = (p,pac) ->
         address = plistp[p].udp.address();
         console.log 'UDP Server listening on ' + address.address + ":" + address.port
       plistp[p].udp.on 'message', (message, remote) ->
-        console.log "msg:",message
+        console.log "msg:",message.toString()
     message = new Buffer(pac[12..-2]);
     plistp[p].udp.send message, 0, message.length, port, ip, (err, bytes) ->
       if (err)
@@ -172,26 +216,22 @@ initport = (p) ->
     parity: 'none'
     stopBits: 1
     flowControl: false
-    #parser: serialport.parsers.readline("\n")
   ,false)
   myPort.open (error) ->
     if error
-      console.log "ei aukea ",p
+      console.log "Error: Cannot Open ",p
       plist[p].state="failed"
       plist[p].stamp=stamp()
     else
-      console.log "aukes",p
       plist[p].state="open"
       plist[p].stamp=stamp()
       plistp[p].port=myPort
 
       myPort.on "data", (data) ->
-        #console.log "#{p}: #{data}"
         dbuf=""
         for ch in data
           if not p3_inchar(p,ch)
             dbuf+=String.fromCharCode ch
-          #console.log ":",ch,":",String.fromCharCode ch
         if dbuf!=""
           sse_out
             "type": "debug"
@@ -201,13 +241,11 @@ initport = (p) ->
       myPort.on "close", (error) ->
         console.log "port closed: #{p} " + error
         zap p
-        #plist[p].state="closed"
         return
 
       myPort.write "ident\n", (err, results) ->
         if err
           console.log "err " + err
-        console.log "results <" + results+">"
         return
 
 old_plist={}
@@ -236,8 +274,8 @@ zap = (p) ->
   if plist[p]
     delete plist[p]
   if plistp[p]
-    if plistpp[p].udp
-      plistpp[p].udp.close
+    if plistp[p].udp
+      plistp[p].udp.close
     if plistp[p].port
       plistp[p].port.close
     delete plistp[p]
