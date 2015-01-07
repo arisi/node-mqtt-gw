@@ -235,17 +235,20 @@ scanports = () ->
         plistp[p].port.close
       delete plist[p]
       delete plistp[p]
+      console.log plist
     if obj.state == "open" and obj.lastp3 < (stamp() - 10000) #lost port
       console.log "stale p3 port #{p}"
       if plistp[p].port
         plistp[p].port.close
       delete plist[p]
       delete plistp[p]
+      console.log plist
     if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
       if plist[p].state=="initing" and obj.stamp > (stamp() - 10000)
         return
       console.log "initing",p
       initport p
+      console.log plist
 
 scanports()
 
