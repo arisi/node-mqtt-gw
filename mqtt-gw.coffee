@@ -210,12 +210,13 @@ plist2sse = (ses) ->
 
 scanports = () ->
   #this needed for linux, as .list does not seem to pick up all serial ports
-  files=fs.readdirSync "/dev"
-  pat = new RegExp(/^tty(ACM|USB).+$/);
-  for f in files
-    if f.match pat
-      p="/dev/#{f}"
-      addport p
+  if (fs.existsSync("/dev"))
+    files=fs.readdirSync "/dev"
+    pat = new RegExp(/^tty(ACM|USB).+$/);
+    for f in files
+      if f.match pat
+        p="/dev/#{f}"
+        addport p
 
   serialport.list (err, ports) ->
     for port in ports
@@ -223,6 +224,12 @@ scanports = () ->
         addport port.comName
   plist2sse(0)
   for p,obj of plist
+    if obj.state == "open" and obj.exist < (stamp() - 5000) #lost port
+      console.log "stale port #{p}"
+      if plistp[p].port
+        plistp[p].port.close
+      delete plist[p]
+      delete plistp[p]
     if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
       console.log "initing",p
       initport p
