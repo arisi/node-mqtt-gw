@@ -117,6 +117,9 @@ p3_inpac = (p,pac) ->
     "s3": pac
 
 p3_inchar = (p,ch) ->
+  if not plist[p]
+    return false
+
   if ch==P3_START and not plist[p].p3esc and not plist[p].p3
     plist[p].p3=true
     plist[p].p3buf=[]
@@ -232,11 +235,19 @@ scanports = () ->
         plistp[p].port.close
       delete plist[p]
       delete plistp[p]
+    if obj.state == "open" and obj.lastp3 < (stamp() - 10000) #lost port
+      console.log "stale p3 port #{p}"
+      if plistp[p].port
+        plistp[p].port.close
+      delete plist[p]
+      delete plistp[p]
     if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
       if plist[p].state=="initing" and obj.stamp > (stamp() - 10000)
         return
       console.log "initing",p
       initport p
+
+scanports()
 
 setInterval (->
   scanports()
