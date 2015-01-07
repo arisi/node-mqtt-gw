@@ -138,8 +138,6 @@ p3_inchar = (p,ch) ->
   return true
 
 initport = (p) ->
-  if plist[p].state=="initing"
-    return
   plist[p].state="initing"
   plist[p].stamp=stamp()
   myPort = new SerialPort(p,
@@ -235,6 +233,8 @@ scanports = () ->
       delete plist[p]
       delete plistp[p]
     if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
+      if plist[p].state=="initing" and obj.stamp > (stamp() - 10000)
+        return
       console.log "initing",p
       initport p
 
