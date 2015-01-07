@@ -79,7 +79,7 @@ stamp = () ->
   (new Date).getTime();
 
 sse_out = (obj) ->
-  console.log "sse_out #{obj.type} ->",sse_list
+  #console.log "sse_out #{obj.type} ->",sse_list
   for ses,sse of sse_list
     sse obj
 
@@ -163,7 +163,7 @@ initport = (p) ->
       plistp[p].port=myPort
 
       myPort.on "data", (data) ->
-        console.log "#{p}: #{data}"
+        #console.log "#{p}: #{data}"
         dbuf=""
         for ch in data
           if not p3_inchar(p,ch)
