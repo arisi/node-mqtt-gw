@@ -226,7 +226,7 @@ scanports = () ->
         addport port.comName
   plist2sse(0)
   for p,obj of plist
-    if obj.state == "open" and obj.exist < (stamp() - 5000) #lost port
+    if obj.state == "open" and obj.exist < (stamp() - 10000) #lost port
       console.log "stale port #{p}"
       if plistp[p].port
         plistp[p].port.close
