@@ -58,18 +58,25 @@ app.get "/:page.sse", (req, res) ->
     console.log "sse #{ses} closed"
     delete sse_list[ses]
 
+app.get ["/ajax"], (req, res) ->
+  console.log "ajax:",req.query,"params:",req.params
+  for p,dev of plistp
+    console.log "dev:",p,dev
+    if dev.port
+      dev.port.write "#{req.query.send}\n"
+  res.json plist
 
-app.get "/:page", (req, res) ->
+app.get ["/:page.html","/:page.htm","/"], (req, res) ->
   console.log "doin haml:",req.query,"params:",req.params
-  data={title: "jees"}
-  ham = fs.readFileSync "views/index.haml", "ascii"
-  comp= hamlc.compile ham
-  str= comp plist: plist
-  console.log str
+  comp= hamlc.compile fs.readFileSync "views/index.haml", "ascii"
+  str= comp
+    plist: plist
   res.send str
-  console.log "did haml "
 
 app.listen 3000
+
+stamp = () ->
+  (new Date).getTime();
 
 sse_out = (obj) ->
   console.log "sse_out #{obj.type} ->",sse_list
@@ -78,12 +85,36 @@ sse_out = (obj) ->
 
 addport = (p) ->
   if not plist[p] or plist[p].state=="closed"
-    plist[p]={state: "init",p3: false, p3esc: false,p3buf: []}
+    plist[p]={state: "init",p3: false, p3esc: false,p3buf: [],stamp: 0, id:"" }
     plistp[p]={}
+  plist[p].exist=stamp()
 
 P3_START='~'.charCodeAt(0)
 P3_END='^'.charCodeAt(0)
 P3_ESC='#'.charCodeAt(0)
+
+p3_inpac = (p,pac) ->
+  plist[p].lastp3=stamp()
+  if pac[0]=="P".charCodeAt(0)
+    id=""
+    for ch in pac[12..-2]
+      id+=String.fromCharCode ch
+    console.log "PINGI!!!! len=#{pac[11]} '#{id}'"
+    if plist[p].id==""
+      plist[p].id=id
+      sse_out
+        "type": "plist"
+        "port": p
+        "data": plist[p]
+
+    else plist[p].id!=id
+      #conflict -- serial number has changed?
+  else if pac[0]=="U".charCodeAt(0)
+    console.log "UDP!!!! len=#{pac[11]}"
+  sse_out
+    "type": "s3"
+    "port": p
+    "s3": pac
 
 p3_inchar = (p,ch) ->
   if ch==P3_START and not plist[p].p3esc and not plist[p].p3
@@ -91,10 +122,7 @@ p3_inchar = (p,ch) ->
     plist[p].p3buf=[]
     return true
   else if ch==P3_END and not plist[p].p3esc and plist[p].p3
-    sse_out
-      "type": "s3"
-      "port": p
-      "s3": plist[p].p3buf
+    p3_inpac p, plist[p].p3buf
     plist[p].p3=false
     return true
   else
@@ -121,9 +149,12 @@ initport = (p) ->
   myPort.open (error) ->
     if error
       console.log "ei aukea ",p
+      plist[p].state="failed"
+      plist[p].stamp=stamp()
     else
       console.log "aukes",p
       plist[p].state="open"
+      plist[p].stamp=stamp()
       plistp[p].port=myPort
 
       myPort.on "data", (data) ->
@@ -141,7 +172,9 @@ initport = (p) ->
 
       myPort.on "close", (error) ->
         console.log "port closed: #{p} " + error
-        plist[p].state="closed"
+        delete plist[p]
+        delete plistp[p]
+        #plist[p].state="closed"
         return
 
       myPort.write "ident\n", (err, results) ->
@@ -158,7 +191,7 @@ plist2sse = (ses) ->
       sse_out
         "type": "plist"
         "port": p
-        "state": plist[p].state
+        "data": plist[p]
   else
     for p,obj of plist
       if not old_plist[p] or old_plist[p].state!=plist[p].state
@@ -171,7 +204,7 @@ plist2sse = (ses) ->
           "type": "plist"
           "port": p
           "ostate": ostate
-          "state": plist[p].state
+          "data": plist[p]
         old_plist[p].state=plist[p].state
 
 
@@ -190,7 +223,7 @@ scanports = () ->
         addport port.comName
   plist2sse(0)
   for p,obj of plist
-    if obj.state =="init"
+    if obj.state != "open" and obj.stamp < (stamp() - 2000) and obj.exist > (stamp() - 5000)
       console.log "initing",p
       initport p
 

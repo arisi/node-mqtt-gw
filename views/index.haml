@@ -2,16 +2,11 @@
 %html(lang="en")
   %head
     %title NODE-MQTT-GW
-    %meta{:charset => "utf-8"}/
+    %meta{:charset => "utf-8"}
     %link{:href => "/css/node-mqtt-gw.css", :rel => "stylesheet", :type => "text/css"}
     %script{:src => "https://code.jquery.com/jquery-2.1.1.min.js"}
     %script{:src => "/js/node-mqtt-gw.js"}
   %body
-    Portit:
-    %ul
-      -for p,obj of @plist
-        %li
-          =p
-          ,
-          =obj.state
+    %input#send{onkeydown: "if (event.keyCode == 13) {ajax({send: $('#send').val()});return(false);}"}
+    %button{onclick: "ajax({send: $('#send').val()});return(false);"} SEND
     %pre.log#loki
