@@ -1,5 +1,25 @@
 .log {
+    position: absolute;
+    left:0;
+    top:20;
     height: 400px;
-    width: 100%;
+    width: 800px;
     overflow: scroll;
+}
+.devs {
+    position: absolute;
+    left:800px;
+    top:0;
+    height: 400px;
+    width: 600px;
+    overflow: scroll;
+}
+
+td {
+  font-size: 9pt;
+  text-align: right;
+}
+th {
+  font-size: 9pt;
+  text-align: center;
 }

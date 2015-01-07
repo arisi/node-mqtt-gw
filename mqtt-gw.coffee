@@ -192,11 +192,9 @@ old_plist={}
 
 plist2sse = (ses) ->
   if ses>0
-    for p,obj of plist
-      sse_out
-        "type": "plist"
-        "port": p
-        "data": plist[p]
+    sse_out
+      "type": "plist_all"
+      "data": plist
   else
     for p,obj of plist
       if not old_plist[p] or old_plist[p].state!=plist[p].state
@@ -255,7 +253,12 @@ scanports()
 setInterval (->
   scanports()
   return
-), 10
+), 1000
+
+setInterval (->
+  plist2sse(1)
+  return
+), 1000
 
 options =
   host: "www.google.com"
