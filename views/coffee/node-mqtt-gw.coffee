@@ -118,5 +118,6 @@ jQuery ($, undefined_) ->
     height: 600
     width: 800
     prompt: "] "
-  return
+  chrome.bluetooth.getDevices (a,b)->
+    console.log a,b
 

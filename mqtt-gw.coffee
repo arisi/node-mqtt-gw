@@ -324,6 +324,11 @@ setInterval (->
   return
 ), 1000
 
+getUserHome = () ->
+  process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+
+console.log "HOME:",getUserHome()
+
 options =
   host: "www.google.com"
   port: 80
