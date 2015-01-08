@@ -15,10 +15,34 @@ cs = require 'coffee-script'
 printf = require('printf');
 dgram = require('dgram');
 sprintf = require('sprintf').sprintf;
+yaml = require('js-yaml');
+
+getUserHome = () ->
+  process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
+
+console.log "HOME:",getUserHome()
+
+options={jee: ["joo","jyy",123]}
+
+cfile="#{getUserHome()}/node-mqtt-gw.yaml"
+console.log "cfile:",cfile
+try
+  options = yaml.safeLoad(fs.readFileSync(cfile, 'utf8'));
+  console.log options;
+catch e
+  console.log(e);
+  console.log "no config!"
+
+data=yaml.dump(options)
+console.log "->",data
+
+fs.writeFile cfile, data, "utf-8", () ->
+  console.log "wrote ok",data
 
 app = express()
 
 console.log "workdir:",__dirname
+
 
 app.get "/js/:page.js", (req, res) ->
   res.set('Content-Type', 'application/javascript');
@@ -47,7 +71,7 @@ app.get "/:page.sse", (req, res) ->
   messageCount = 0
   ses=sse_sc
   res.write('id: ' + messageCount + '\n');
-  res.write("data: " + JSON.stringify({type: "init",ses: ses}) + '\n\n');
+  res.write("data: " + JSON.stringify({type: "init",ses: ses,options: options}) + '\n\n');
   messageCount++
 
   sse_sc+=1
@@ -75,6 +99,17 @@ app.get ["/:page.html","/:page.htm","/"], (req, res) ->
   str= comp
     plist: plist
   res.send str
+
+app.use (req, res) ->
+  console.log "def:",req
+
+  path=req._parsedUrl.pathname
+  if (fs.existsSync("views/#{path}"))
+    cof = fs.readFileSync "views/#{path}", "ascii"
+    res.send cof
+  else
+    res.send(404);
+
 
 app.listen 3000
 
@@ -310,7 +345,7 @@ scanports = () ->
         return
       console.log "initing",p
       initport p
-      console.log plist
+      #console.log plist
 
 scanports()
 
@@ -324,18 +359,15 @@ setInterval (->
   return
 ), 1000
 
-getUserHome = () ->
-  process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
 
-console.log "HOME:",getUserHome()
-
-options =
-  host: "www.google.com"
-  port: 80
-  path: "/index.html"
 
 if false
-  http.get(options, (res) ->
+  woptions =
+    host: "www.google.com"
+    port: 80
+    path: "/index.html"
+
+  http.get(woptions, (res) ->
     console.log "Got response: " + res.statusCode
     return
   ).on "error", (e) ->
@@ -351,6 +383,7 @@ exitHandler = (options, err) ->
   console.log err.stack  if err
   process.exit()  if options.exit
   return
+
 process.stdin.resume()
 
 #do something when app is closing

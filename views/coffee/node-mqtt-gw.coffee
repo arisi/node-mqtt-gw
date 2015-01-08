@@ -26,7 +26,7 @@ delta = (s) ->
   if s
     ((stamp()-s)/1000).toFixed(1)
   else
-    ""
+    100000000
 buf=""
 
 buf2term = () ->
@@ -40,28 +40,20 @@ buf2term = () ->
 
 sse_data = (obj) ->
   if obj.type =="plist_all"
-    html="<table>"
-    html+="<tr>"
-    html+="<th>port</th>"
-    html+="<th>serno</th>"
-    html+="<th>state</th>"
-    html+="<th>lastp3</th>"
-    html+="<th>stamp</th>"
-    html+="<th>exist</th>"
-    html+="<tr>"
+    l=[]
     for dev,data of obj.data
-      html+="<tr>"
-      html+="<td>#{dev}</td>"
-      html+="<td>#{data.id}</td>"
-      html+="<td>#{data.state}</td>"
-      html+="<td>#{delta(data.lastp3)}</td>"
-      html+="<td>#{delta(data.stamp)}</td>"
-      html+="<td>#{delta(data.exist)}</td>"
-      html+="</td>"
-      html+="</tr>"
-    html+="</table>"
-    console.log obj
-    $("#devs").html html
+      data.dev=dev
+      if delta(data.lastp3)>10
+        data.class="danger"
+      else
+        data.class="success"
+      if data.id
+        data.id=data.id[-6..-1]
+      l.push data
+    dust.render "devs_template", { data: l,randomi: Math.random()}, (err, out) ->
+      if err
+        console.log "dust:",err,out
+      $("#devs").html out
   else if obj.type =="debug"
     #$(".log").append obj.txt
     #$(".log").scrollTop($("#loki")[0].scrollHeight);
@@ -73,6 +65,12 @@ sse_data = (obj) ->
     console.log obj
     console.log "strange packet"
 
+dust.helpers.age = (chunk, context, bodies, params) ->
+  if t=params.t
+    age=((stamp()-t)/1000).toFixed(1)
+  else
+    age=""
+  return chunk.write age
 
 jQuery ($, undefined_) ->
 
@@ -116,8 +114,12 @@ jQuery ($, undefined_) ->
     greetings: "Tikkuterminaali!"
     name: "tikku"
     height: 600
-    width: 800
+    width: "100%"
     prompt: "] "
-  chrome.bluetooth.getDevices (a,b)->
-    console.log a,b
+
+  $("script[type='text/template']").each (index) ->
+    console.log index + ": " + $(this).attr("id")
+    dust.loadSource(dust.compile($("#"+$(this).attr("id")).html(),$(this).attr("id")))
+    return
+
 
