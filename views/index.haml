@@ -3,8 +3,10 @@
   %head
     %title NODE-MQTT-GW
     %meta{:charset => "utf-8"}
+    %link{:href => "http://s.debet.fi/js/jquery.terminal.css", :rel => "stylesheet", :type => "text/css"}
     %link{:href => "/css/node-mqtt-gw.css", :rel => "stylesheet", :type => "text/css"}
     %script{:src => "https://code.jquery.com/jquery-2.1.1.min.js"}
+    %script{:src => "http://s.debet.fi/js/jquery.terminal-0.8.8.min.js"}
     %script{:src => "/js/node-mqtt-gw.js"}
   %body
     %input#send{onkeydown: "if (event.keyCode == 13) {ajax({send: $('#send').val()});return(false);}"}
@@ -12,3 +14,4 @@
     %pre.log#loki
     .devs#devs
       xx
+    #term

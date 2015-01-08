@@ -1,4 +1,5 @@
-
+term=null
+pause=false
 stamp = () ->
   (new Date).getTime();
 
@@ -26,10 +27,18 @@ delta = (s) ->
     ((stamp()-s)/1000).toFixed(1)
   else
     ""
+buf=""
 
-source = new EventSource("/log.sse")
-source.addEventListener "message", ((e) -> # note: 'newcontent'
-  obj=$.parseJSON(e.data)
+buf2term = () ->
+  while true
+    p=buf.indexOf("\n")
+    if p!=-1
+      term.echo "[[b;yellow;black]#{buf[0..p-1]}]"
+      buf=buf[p+1..-1]
+    else
+      break
+
+sse_data = (obj) ->
   if obj.type =="plist_all"
     html="<table>"
     html+="<tr>"
@@ -54,12 +63,60 @@ source.addEventListener "message", ((e) -> # note: 'newcontent'
     console.log obj
     $("#devs").html html
   else if obj.type =="debug"
-    $(".log").append obj.txt
-    $(".log").scrollTop($("#loki")[0].scrollHeight);
+    #$(".log").append obj.txt
+    #$(".log").scrollTop($("#loki")[0].scrollHeight);
+    #term.echo "[[raw]#{obj.txt}]"
+    buf+=obj.txt
+    if not pause
+      buf2term()
   else
     console.log obj
     console.log "strange packet"
+
+
+jQuery ($, undefined_) ->
+
+  source = new EventSource("/log.sse")
+  source.addEventListener "message", ((e) -> # note: 'newcontent'
+    obj=$.parseJSON(e.data)
+    sse_data obj
+    return
+  ), false
+  ajax
+    send: "\nauth 1682\n"
+
+  term=$("#term").terminal ((command, term) ->
+    if command isnt ""
+      try
+        if command=="rs"
+          command="rbuf stat"
+        else if command=="ds"
+          command="devs stat"
+        else if command=="ps"
+          command="tasks stat"
+        if command=="cls"
+          term.clear()
+        else if command=="pause"
+          pause=not pause
+          if pause
+            term.echo "paused!"
+          else
+            term.echo "unpaused!"
+            buf2term()
+        else
+          ajax
+            send: "#{command}\n"
+        #term.echo new String(result)  if result isnt `undefined`
+      catch e
+        term.error new String(e)
+    else
+      term.echo ""
+    return
+  ),
+    greetings: "Tikkuterminaali!"
+    name: "tikku"
+    height: 600
+    width: 800
+    prompt: "] "
   return
-), false
-ajax
-  send: "ident\n"
+
