@@ -1,4 +1,4 @@
-console.log "node-mqtt-gw:"
+console.log "node-mqtt-gw:::"
 
 plist={}
 plistp={}
