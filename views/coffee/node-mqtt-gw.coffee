@@ -121,5 +121,8 @@ jQuery ($, undefined_) ->
     console.log index + ": " + $(this).attr("id")
     dust.loadSource(dust.compile($("#"+$(this).attr("id")).html(),$(this).attr("id")))
     return
-
+  dust.render "form_template", { randomi: Math.random()}, (err, out) ->
+    if err
+      console.log "dust:",err,out
+    $("#form").html out
 

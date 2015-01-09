@@ -46,20 +46,23 @@
         %td {@age t=exist /}
       {/data}
 
-  %script#tabit_template{:type=>'text/template'}
-    %h1 tadaa
-    {#tabit}
-    %li
-      %a{"data-toggle" => "tab", href: "\#tab_{key}", id: "tabi_{key}"}
-        {title}
-        {@if cond="'{key}' != 'ETSI' && '{key}' != 'UUDET' && 1==2" }
-        &nbsp;
-        &nbsp;
-        %span{onclick: "del_tab('{key}'); return(false);", style:  "cursor: pointer; cursor: hand;"}
-          %font{color: "red"}
-            X
-        {/if}
-    {/tabit}
+  %script#form_template{:type=>'text/template'}
+    .panel.panel-default
+      .panel-heading
+        %h3.panel-title Configuration:
+      .panel-body
+        %form.form-horizontal
+          .form-group
+            %label.col-sm-2.control-label{:for => "inputEmail3"} Email
+            .col-sm-10
+              %input#inputEmail3.form-control{:placeholder => "Email", :type => "email"}
+          .form-group
+            %label.col-sm-2.control-label{:for => "inputPassword3"} Password
+            .col-sm-10
+              %input#inputPassword3.form-control{:placeholder => "Password", :type => "password"}
+          .form-group
+            .col-sm-offset-2.col-sm-10
+              %button.button.btn.btn-success OK!
   %nav.navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
     .container
       .navbar-header
@@ -82,7 +85,7 @@
         #term
       .col-md-6
         #devs
-        #form
+        #form tadaa
     %hr
       %footer
         %p &copy; myGeiger 2015
