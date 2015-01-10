@@ -1,5 +1,6 @@
 term=null
 pause=false
+init={}
 stamp = () ->
   (new Date).getTime();
 
@@ -38,8 +39,36 @@ buf2term = () ->
     else
       break
 
+@ajax_form = (fn) ->
+  console.log "formi!"
+  data={}
+  $("##{fn} :input").each () ->
+    fn=[this.name]
+    if fn and fn>""
+      val=$(this).val();
+      data[fn]=val
+      console.log "#{fn}: #{val}"
+  console.log ">",data
+  ajax
+    act: "options"
+    data: data
+
+update_form = () ->
+  console.log "init",init
+  dust.render "form_template", init.options, (err, out) ->
+    if err
+      console.log "dust:",err,out
+    $("#form").html out
+
+
 sse_data = (obj) ->
-  if obj.type =="plist_all"
+  if obj.type =="init"
+    init=obj
+    update_form()
+  else if obj.type =="options"
+    init.options=obj.options
+    update_form()
+  else if obj.type =="plist_all"
     l=[]
     for dev,data of obj.data
       data.dev=dev
@@ -103,7 +132,8 @@ jQuery ($, undefined_) ->
             buf2term()
         else
           ajax
-            send: "#{command}\n"
+            act: "send"
+            data: "#{command}\n"
         #term.echo new String(result)  if result isnt `undefined`
       catch e
         term.error new String(e)
@@ -121,8 +151,4 @@ jQuery ($, undefined_) ->
     console.log index + ": " + $(this).attr("id")
     dust.loadSource(dust.compile($("#"+$(this).attr("id")).html(),$(this).attr("id")))
     return
-  dust.render "form_template", { randomi: Math.random()}, (err, out) ->
-    if err
-      console.log "dust:",err,out
-    $("#form").html out
 

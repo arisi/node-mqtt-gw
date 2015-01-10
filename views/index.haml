@@ -51,18 +51,23 @@
       .panel-heading
         %h3.panel-title Configuration:
       .panel-body
-        %form.form-horizontal
+        %form#ff.form-horizontal
           .form-group
-            %label.col-sm-2.control-label{:for => "inputEmail3"} Email
-            .col-sm-10
-              %input#inputEmail3.form-control{:placeholder => "Email", :type => "email"}
+            %label.col-sm-3.control-label{:for => "include"} Include:
+            .col-sm-9
+              %input#include.form-control{:placeholder => "", :type => "text", :value => "{include}", :name => "include"}
           .form-group
-            %label.col-sm-2.control-label{:for => "inputPassword3"} Password
-            .col-sm-10
-              %input#inputPassword3.form-control{:placeholder => "Password", :type => "password"}
+            %label.col-sm-3.control-label{:for => "exclude"} Exclude:
+            .col-sm-9
+              %input.form-control{:placeholder => "", :type => "text", :value => "{exclude}", :name => "exclude"}
           .form-group
-            .col-sm-offset-2.col-sm-10
-              %button.button.btn.btn-success OK!
+            %label.col-sm-3.control-label{:for => "mqtt"} MQTT-SN URL:
+            .col-sm-9
+              %input.form-control{:placeholder => "", :type => "text", :value => "{mqtt}", :name => "mqtt"}
+          .form-group
+            .col-sm-offset-3.col-sm-9
+              %button.button.btn.btn-success{:onclick => "ajax_form('ff'); return(false);"} OK!
+
   %nav.navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
     .container
       .navbar-header

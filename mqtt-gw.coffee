@@ -86,12 +86,26 @@ app.get "/:page.sse", (req, res) ->
     delete sse_list[ses]
 
 app.get ["/ajax"], (req, res) ->
-  console.log "ajax:",req.query,"params:",req.params
-  for p,dev of plistp
-    console.log "dev:",p,dev
-    if dev.port
-      dev.port.write "#{req.query.send}\n"
-  res.json plist
+  #console.log "ajax:",req.query,"params:",req.params
+  ret={}
+  if req.query.act == "options"
+    console.log "options",req.query.data
+    options=req.query.data
+    y=yaml.dump(options)
+    fs.writeFile cfile, y, "utf-8", () ->
+      console.log "wrote ok",y
+      sse_out
+        type: "options"
+        options: options
+
+  else if req.query.act == "send"
+    for p,dev of plistp
+      if dev.port
+        dev.port.write "#{req.query.data}\n"
+  else
+    console.log "strange act",req.query.act
+  res.json ret
+  #res.json plist
 
 app.get ["/:page.html","/:page.htm","/"], (req, res) ->
   console.log "doin haml:",req.query,"params:",req.params
