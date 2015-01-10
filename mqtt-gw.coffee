@@ -136,6 +136,13 @@ sse_out = (obj) ->
     sse obj
 
 addport = (p) ->
+  #console.log "addport #{p} #{options.exclude}"
+  pat = new RegExp(options.exclude,"i");
+  #pat = new RegExp(/USB1/);
+  if p.match pat
+    if plist[p]
+      zap p
+    return
   if not plist[p] or plist[p].state=="closed"
     zap p
     plist[p]={state: "init",p3: false, p3esc: false,p3buf: [],stamp: 0, id:"" }
