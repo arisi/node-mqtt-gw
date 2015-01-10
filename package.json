@@ -1,8 +1,8 @@
 {
   "name": "node-mqtt-gw",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "MQTT Gateway for USB-Serial ",
-  "main": "ser.js",
+  "main": "mqtt-gw.js",
   "dependencies": {
     "serialport": "^1.4.10",
     "hamljs": "",
@@ -14,7 +14,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-        "mqgw": "ser.js"
+        "mqtt-gw": "mqtt-gw.js"
   },
   "repository": {
     "type": "git",
